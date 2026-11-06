@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "title": "The Witcher 3: Wild Hunt",
+    "developer": "PC",
+    "genre": "RPG",
+    "price": 1999,
+    "releaseYear": 2015,
+    "rating": 4,
+    "stock": 10
+  },
+  {
+    "id": 2,
+    "title": "string",
+    "developer": "string",
+    "genre": "string",
+    "price": 0,
+    "releaseYear": 0,
+    "rating": 0,
+    "stock": 0
+  }
+]
