@@ -52,7 +52,6 @@ C:\Users\Ярослав\Desktop\Game_API_NET-main\bin\Debug\net10.0\appsettings.
 C:\Users\Ярослав\Desktop\Game_API_NET-main\bin\Debug\net10.0\Data\games.json
 C:\Users\Ярослав\Desktop\Game_API_NET-main\bin\Debug\net10.0\Data\users.json
 C:\Users\Ярослав\Desktop\Game_API_NET-main\bin\Debug\net10.0\Gameapi.staticwebassets.endpoints.json
-C:\Users\Ярослав\Desktop\Game_API_NET-main\bin\Debug\net10.0\Data\cart.json
 C:\Users\Ярослав\Desktop\Game_API_NET-main\bin\Debug\net10.0\Gameapi.exe
 C:\Users\Ярослав\Desktop\Game_API_NET-main\bin\Debug\net10.0\Gameapi.deps.json
 C:\Users\Ярослав\Desktop\Game_API_NET-main\bin\Debug\net10.0\Gameapi.runtimeconfig.json
@@ -75,3 +74,6 @@ C:\Users\Ярослав\Desktop\Game_API_NET-main\obj\Debug\net10.0\swae.build.e
 C:\Users\Ярослав\Desktop\Game_API_NET-main\obj\Debug\net10.0\Gameapi.csproj.Up2Date
 C:\Users\Ярослав\Desktop\Game_API_NET-main\obj\Debug\net10.0\Gameapi.genruntimeconfig.cache
 C:\Users\Ярослав\Desktop\Game_API_NET-main\obj\Debug\net10.0\ref\Gameapi.dll
+C:\Users\Ярослав\Desktop\Game_API_NET-main\bin\Debug\net10.0\Data\carts.json
+C:\Users\Ярослав\Desktop\Game_API_NET-main\bin\Debug\net10.0\Data\orders.json
+C:\Users\Ярослав\Desktop\Game_API_NET-main\obj\Debug\net10.0\Gameapi.sourcelink.json

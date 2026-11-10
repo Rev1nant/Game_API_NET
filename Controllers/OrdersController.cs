@@ -1,6 +1,7 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using Gameapi.Models;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Gameapi.Controllers;
@@ -10,17 +11,24 @@ namespace Gameapi.Controllers;
 public class OrdersController: ControllerBase
 {
     public static JsonWorker<Order> OrderJson = new JsonWorker<Order>("orders.json");
+    public static JsonWorker<Cart> CartJson = new JsonWorker<Cart>("carts.json");
+    public static JsonWorker<User> UserJson = new JsonWorker<User>("users.json");
+    public static JsonWorker<Game> GameJson = new JsonWorker<Game>("games.json");
+    private static string? Validate(Order order)
+    {
+        var orders = OrderJson.LoadJson();
+        var users = UserJson.LoadJson();
+        var games = GameJson.LoadJson();
 
-    // private static string? Validate(Order order)
-    // {
-    //     var orders = OrderJson.LoadJson();
-
-    //     if (string.IsNullOrWhiteSpace(order.Name)) return "Имя обязательно.";
-    //     if (string.IsNullOrWhiteSpace(order.Email)) return "email обязательно.";
-    //     if (orders.Any(u => u.Email == order.Email)) return "email уже зарегистрирован";
-    //     if (order.Balance < 0) return "Баланс не может быть отрицательным";
-    //     return null;
-    // }
+        if (users.Any(u => u.Id == order.UserId) == false) return "Пользователь не найден";
+        if (order.Items.Count == 0) return "Items не должен быть пустым";
+        if (order.TotalAmount != order.Items.Count) return "Количество должно совпадать";
+        foreach(OrderItem item in order.Items)
+        {
+            if (!(item.Quantity > 0 && item.Quantity <= games.FirstOrDefault(g => g.Id == item.GameId).Stock)) return "Количество не может быть меньше 0 или больше stock";
+        }
+        return null;
+    }
 
     [HttpGet("GetAll")]
     public ActionResult<List<Order>> GetAll([FromQuery] int? userId, [FromQuery] string? status, [FromQuery] decimal? minTotal)
@@ -75,19 +83,19 @@ public class OrdersController: ControllerBase
     // //     });
     // // }
 
-    // [HttpPost("AddOrder")]
-    // public ActionResult<Order> AddOrder([FromBody] Order newOrder)
-    // {
-    //     var error = Validate(newOrder);
-    //     if (error is not null) return BadRequest(error);
+    [HttpPost("AddOrder")]
+    public ActionResult<Order> AddOrder([FromBody] Order newOrder)
+    {
+        var error = Validate(newOrder);
+        if (error is not null) return BadRequest(error);
 
-    //     var orders = OrderJson.LoadJson();
-    //     newOrder.Id = orders.Count > 0 ? orders.Max(g => g.Id) + 1 : 1;
-    //     orders.Add(newOrder);
-    //     OrderJson.SaveJson(orders);
+        var orders = OrderJson.LoadJson();
+        newOrder.Id = orders.Count > 0 ? orders.Max(g => g.Id) + 1 : 1;
+        orders.Add(newOrder);
+        OrderJson.SaveJson(orders);
 
-    //     return CreatedAtAction(nameof(GetById), new { id = newOrder.Id }, newOrder);
-    // }
+        return CreatedAtAction(nameof(GetById), new { id = newOrder.Id }, newOrder);
+    }
 
     // [HttpPost("{id:int}/TopUp")]
     // public ActionResult<Order> TopUp(int id, [FromQuery] int amount)
@@ -123,24 +131,19 @@ public class OrdersController: ControllerBase
     //     return NoContent();
     // }
 
-    // [HttpPatch("Patch/{id:int}")]
-    // public ActionResult<Order> Patch(int id, [FromBody] OrderPatchDto patch)
-    // {
-    //     var orders = OrderJson.LoadJson();
-    //     var order = orders.FirstOrDefault(g => g.Id == id);
-    //     if (order is null) return NotFound();
+    [HttpPatch("Patch/{id:int}")]
+    public ActionResult<Order> Patch(int id, [FromBody] string newStatus)
+    {
+        var orders = OrderJson.LoadJson();
+        var order = orders.FirstOrDefault(o => o.Id == id);
+        if (order is null) return NotFound();
 
-    //     if (patch.Role is not null) order.Role = patch.Role;
-    //     if (patch.Name is not null) order.Name = patch.Name;
-    //     if (patch.Email is not null) order.Email = patch.Email;
-    //     if (patch.Amount.HasValue) order.Balance = patch.Amount.Value;
+        if (newStatus != "New" || newStatus != "Paid" || newStatus != "Shipped" || newStatus != "Cancelled") return BadRequest("Такого статуса не существует");
+        if (newStatus is not null) order.Status = newStatus;
 
-    //     var error = Validate(order);
-    //     if (error is not null) return BadRequest(error);
-
-    //     OrderJson.SaveJson(orders);
-    //     return order;
-    // }
+        OrderJson.SaveJson(orders);
+        return order;
+    }
 
     // [HttpDelete("Delete/{id:int}")]
     // public IActionResult Delete(int id)
