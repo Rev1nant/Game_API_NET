@@ -1,0 +1,16 @@
+[
+  {
+    "id": 0,
+    "role": "admin",
+    "name": "admin",
+    "email": "admin@gmail.com",
+    "balance": 15
+  },
+  {
+    "id": 1,
+    "role": "user",
+    "name": "Yaroslav",
+    "email": "yaroslavik44@gmail.com",
+    "balance": 13
+  }
+]

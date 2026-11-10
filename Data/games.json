@@ -14,9 +14,9 @@
     "title": "string",
     "developer": "string",
     "genre": "string",
-    "price": 0,
-    "releaseYear": 0,
-    "rating": 0,
-    "stock": 0
+    "price": 750,
+    "releaseYear": 2019,
+    "rating": 5,
+    "stock": 7
   }
 ]

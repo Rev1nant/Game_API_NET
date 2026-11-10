@@ -15,21 +15,23 @@ public class CartsController: ControllerBase
 
     private static string? Validate(Cart cart)
     {
-        if (UserJson.LoadJson().Any(u => u.Id != cart.UserId)) return "Пользователя с таким id не существует";
-        if (GameJson.LoadJson().Any(g => g.Id != cart.GameId)) return "Игра не существует";
-        if (cart.Quantity > 0 || cart.Quantity > GameJson.LoadJson().FirstOrDefault(g => g.Id == cart.GameId).Stock) return "Неверное количество";
+        var game = GameJson.LoadJson().FirstOrDefault(g => g.Id == cart.GameId);
+        if (game is null) return "Такой игры не существует";
+        var user = UserJson.LoadJson().FirstOrDefault(u => u.Id == cart.UserId);
+        if (game is null) return "Пользователя с таким id не существует";
+        if (cart.Quantity > 0 || cart.Quantity > game.Stock) return "Неверное количество";
         return null;
     }
 
-    [HttpGet("GetCart/{userId: int}")]
+    [HttpGet("GetCart/{userId:int}")]
     public ActionResult<Cart> GetCart(int userId)
     {
-        var cart = CartJson.LoadJson().FirstOrDefault(u => u.UserId == userId);
+        var cart = CartJson.LoadJson().FirstOrDefault(c => c.UserId == userId);
         if (cart is null) return NotFound();
         return cart;
     }
 
-    [HttpGet("GetTotal/{userId: int}")]
+    [HttpGet("GetTotal/{userId:int}")]
     public ActionResult<Cart> GetTotal(int userId)
     {
         var carts = CartJson.LoadJson().FindAll(c => c.UserId == userId);
@@ -38,7 +40,9 @@ public class CartsController: ControllerBase
         decimal total = 0;
         foreach (Cart cart in carts)
         {
-            total += GameJson.LoadJson().FirstOrDefault(g => g.Id == cart.GameId).Price * cart.Quantity;
+            var game = GameJson.LoadJson().FirstOrDefault(g => g.Id == cart.GameId);
+            if (game is null) return NotFound();
+            total += game.Price * cart.Quantity;
         }
 
 
@@ -58,6 +62,7 @@ public class CartsController: ControllerBase
         if (UserJson.LoadJson().Any(u => u.Id != newCart.UserId) && GameJson.LoadJson().Any(g => g.Id != newCart.GameId))
         {
             var cart = CartJson.LoadJson().FirstOrDefault(u => u.UserId == newCart.UserId);
+            if (cart is null) return NotFound();
             cart.Quantity += newCart.Quantity;
         } else {
             carts.Add(newCart);
