@@ -3,6 +3,7 @@ using System.Text.Json;
 using Gameapi.Models;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace Gameapi.Controllers;
 
@@ -19,14 +20,18 @@ public class OrdersController: ControllerBase
         var orders = OrderJson.LoadJson();
         var users = UserJson.LoadJson();
         var games = GameJson.LoadJson();
+        var carts = CartJson.LoadJson();
 
-        if (users.Any(u => u.Id == order.UserId) == false) return "Пользователь не найден";
-        if (order.Items.Count == 0) return "Items не должен быть пустым";
-        if (order.TotalAmount != order.Items.Count) return "Количество должно совпадать";
-        foreach(OrderItem item in order.Items)
-        {
-            if (!(item.Quantity > 0 && item.Quantity <= games.FirstOrDefault(g => g.Id == item.GameId).Stock)) return "Количество не может быть меньше 0 или больше stock";
-        }
+        var user = users.FirstOrDefault(u => u.Id == order.UserId);
+        if (user is null) return "Пользователя с таким id не существует";
+
+        // foreach(int item in order.Items)
+        // {
+        //     var cart = carts.FirstOrDefault(c => c.UserId == item);
+        //     var game = games.FirstOrDefault(g => g.Id == item);
+        //     if (game is null) return "Игры не существует";
+        //     if (!(item.Quantity > 0 && item.Quantity <= game.Stock)) return "Количество не может быть меньше 0 или больше stock";
+        // }
         return null;
     }
 
@@ -86,50 +91,49 @@ public class OrdersController: ControllerBase
     [HttpPost("AddOrder")]
     public ActionResult<Order> AddOrder([FromBody] Order newOrder)
     {
+        var games = GameJson.LoadJson();
+        var carts = CartJson.LoadJson();
+
         var error = Validate(newOrder);
         if (error is not null) return BadRequest(error);
 
         var orders = OrderJson.LoadJson();
         newOrder.Id = orders.Count > 0 ? orders.Max(g => g.Id) + 1 : 1;
+
+        var userCarts = carts.FindAll(c => c.UserId == newOrder.UserId);
+        if (userCarts is null) return BadRequest("Корзина не должен быть пустым");
+        decimal sumTotal = 0;
+        foreach (Cart cart in userCarts)
+        {
+            var game = games.FirstOrDefault(g => g.Id == cart.GameId);
+            if (game is null) return BadRequest("Игры не существует");
+            sumTotal += cart.Quantity * game.Price;
+        }
+        newOrder.TotalAmount = sumTotal;
         orders.Add(newOrder);
         OrderJson.SaveJson(orders);
 
         return CreatedAtAction(nameof(GetById), new { id = newOrder.Id }, newOrder);
     }
 
-    // [HttpPost("{id:int}/TopUp")]
-    // public ActionResult<Order> TopUp(int id, [FromQuery] int amount)
-    // {
-    //     if (amount <= 0) return BadRequest("Неверная сумма пополнения");
+    [HttpPut("{id:int}")]
+    public IActionResult Update(int id, [FromBody] Order updated)
+    {
+        var error = Validate(updated);
+        if (error is not null) return BadRequest(error);
 
-    //     var orders = OrderJson.LoadJson();
-    //     var order = orders.FirstOrDefault(g => g.Id == id);
-    //     if (order is null) return NotFound();
+        var orders = OrderJson.LoadJson();
+        var order = orders.FirstOrDefault(g => g.Id == id);
+        if (order is null) return NotFound();
+        if (order.Status != "New") return BadRequest("Заказ нельзя обновить");
 
-    //     order.Balance += amount;
-    
-    //     OrderJson.SaveJson(orders);
-    //     return order;
-    // }
+        order.UserId = updated.UserId;
+        order.Status = updated.Status;
+        order.TotalAmount = updated.TotalAmount;
 
-    // [HttpPut("{id:int}")]
-    // public IActionResult Update(int id, [FromBody] Order updated)
-    // {
-    //     var error = Validate(updated);
-    //     if (error is not null) return BadRequest(error);
-
-    //     var orders = OrderJson.LoadJson();
-    //     var order = orders.FirstOrDefault(g => g.Id == id);
-    //     if (order is null) return NotFound();
-
-    //     order.Role = updated.Role;
-    //     order.Name = updated.Name;
-    //     order.Email = updated.Email;
-    //     order.Balance = updated.Balance;
-
-    //     OrderJson.SaveJson(orders);
-    //     return NoContent();
-    // }
+        OrderJson.SaveJson(orders);
+        return NoContent();
+    }
 
     [HttpPatch("Patch/{id:int}")]
     public ActionResult<Order> Patch(int id, [FromBody] string newStatus)
@@ -145,16 +149,16 @@ public class OrdersController: ControllerBase
         return order;
     }
 
-    // [HttpDelete("Delete/{id:int}")]
-    // public IActionResult Delete(int id)
-    // {
-    //     var orders = OrderJson.LoadJson();
-    //     var order = orders.FirstOrDefault(g => g.Id == id);
-    //     if (order is null) return NotFound();
+    [HttpDelete("Cancel/{id:int}")]
+    public IActionResult Cancel(int id)
+    {
+        var orders = OrderJson.LoadJson();
+        var order = orders.FirstOrDefault(g => g.Id == id);
+        if (order is null) return NotFound();
 
-    //     orders.Remove(order);
-    //     OrderJson.SaveJson(orders);
-    //     return NoContent();
-    // }
+        orders.Remove(order);
+        OrderJson.SaveJson(orders);
+        return NoContent();
+    }
 
 }

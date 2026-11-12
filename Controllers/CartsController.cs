@@ -72,11 +72,11 @@ public class CartsController: ControllerBase
         return CreatedAtAction(nameof(GetCart), new { id = newCart.UserId }, newCart);
     }
 
-    // [HttpPost("Checkout/{userId:int}")]
-    // public ActionResult<Order> Checkout(int userId)
-    // {
-
-    // }
+    [HttpPost("Checkout/{userId:int}")]
+    public ActionResult<Order> Checkout(int userId)
+    {
+        
+    }
 
     [HttpPut("{id:int}")]
     public IActionResult Update(int id, [FromBody] Cart updated)
